@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Dashboard</title>
+  <title>School Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
   <style>
@@ -39,20 +39,19 @@
       color: #d1e7dd;
     }
 
-    .btn-primary, .btn-success, .btn-danger {
+    .btn-primary, .btn-secondary {
       width: 100%;
       padding: 10px;
       border-radius: 25px;
       font-size: 1.1em;
       font-weight: bold;
-      background: linear-gradient(135deg, #007bff, #0056b3);
       border: none;
-      transition: background 0.3s ease;
+      transition: background 10s ease;
       box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
     }
 
     .btn-primary:hover {
-      background: linear-gradient(135deg, #0056b3, #003f7f);
+      background: #0056b3;
     }
 
     .table-buttons {
@@ -63,14 +62,17 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <!-- Initial Selection Page -->
     <div id="selection-page">
       <h2>Welcome</h2>
       <p class="text-center">Please select your login type</p>
-      <button class="btn btn-primary mb-3" onclick="showLoginPage('faculty')">Faculty Login</button>
       <button class="btn btn-primary mb-3" onclick="showLoginPage('parent')">Parent Login</button>
+      <button class="btn btn-primary mb-3" onclick="showLoginPage('teacher')">Teacher Login</button>
+      <h3>------------------------------------------------------------</h3>
+      <button class="btn btn-secondary mb-3" onclick="showLoginPage('class-teacher')">Class Teacher Login</button>
     </div>
 
     <!-- Login Page -->
@@ -89,15 +91,18 @@
       <button class="btn btn-secondary mt-3" onclick="goBackToSelection()">Back</button>
     </div>
 
-    <!-- Class Selection -->
+    <!-- Class Selection for Teacher Login -->
     <div id="class-selection" style="display: none;">
-      <h2>Select Class and Subject</h2>
-      <select id="classSelect" class="form-select mb-3"></select>
-      <select id="subjectSelect" class="form-select mb-3"></select>
+      <h2>Select Class</h2>
+      <select id="classSelect" class="form-select mb-3">
+        <option value="Class 1">Class 1</option>
+        <option value="Class 2">Class 2</option>
+        <option value="Class 3">Class 3</option>
+      </select>
       <button class="btn btn-primary" onclick="showStudentTable()">Proceed</button>
     </div>
 
-    <!-- Student Marks Table -->
+    <!-- Student Marks Table for Teacher -->
     <div id="marks-page" style="display: none;">
       <h2 id="subject-title">Teacher Dashboard - <span id="class-name"></span></h2>
       <h4 id="teacher-name"></h4>
@@ -109,7 +114,9 @@
             <th>Marks</th>
           </tr>
         </thead>
-        <tbody id="student-table-body"></tbody>
+        <tbody id="student-table-body">
+          <!-- Student rows will be added dynamically -->
+        </tbody>
       </table>
       <button class="btn btn-success" onclick="submitMarks()">Submit Marks</button>
 
@@ -120,92 +127,179 @@
 
       <button class="btn btn-secondary mt-3" onclick="goBackToClassSelection()">Back</button>
     </div>
+
+    <!-- Class Summary for Class Teacher -->
+    <div id="class-teacher-page" style="display: none;">
+      <h2>Class Teacher Dashboard</h2>
+      <h4 id="class-teacher-name"></h4>
+      <table class="table table-dark table-striped">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Roll No</th>
+            <th>Maths</th>
+            <th>Science</th>
+            <th>English</th>
+          </tr>
+        </thead>
+        <tbody id="class-summary-table-body">
+          <!-- Class summary rows will be added dynamically -->
+        </tbody>
+      </table>
+      <button class="btn btn-secondary mt-3" onclick="goBackToSelection()">Back</button>
+    </div>
+
+    <!-- Parent View -->
+    <div id="parent-page" style="display: none;">
+      <h2>Parent Dashboard</h2>
+      <h4 id="parent-student-name"></h4>
+      <table class="table table-dark table-striped">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Marks</th>
+          </tr>
+        </thead>
+        <tbody id="parent-student-marks">
+          <!-- Student marks will be shown here -->
+        </tbody>
+      </table>
+      <button class="btn btn-secondary mt-3" onclick="goBackToSelection()">Back</button>
+    </div>
   </div>
 
   <script>
-    const teachers = [
-      { username: 'hijaz', password: 'pass1', classes: ['KGA', '1A', '2A', '4A', '4B', '5A'], subjects: ['Quran Recitation', 'Islamic', 'Hifd', 'Moral', 'History'] },
-      { username: 'shaniya', password: 'pass2', classes: ['KG', '1', '2', '3A', '3B'], subjects: ['Hifd', 'Arabic', 'Islamic', 'Moral'] },
-      // More teachers...
+   const teachers = [
+  { username: 'Hijaz', password: 'pass1', subject: 'Quran Recitation, Islamic, Hifd, Moral, History', classes: ['KGA', '1A', '2A', '4A&B', '5A'] },
+  { username: 'Shaniya', password: 'pass2', subject: 'Hifd, Arabic, Islamic, Moral', classes: ['KG', '1', '2', '3A', '3B'] },
+  { username: 'Afrah', password: 'pass3', subject: 'Quran Recitation, Arabic, Hifd', classes: ['2', '3A', '5', 'KG', '4'] },
+  { username: 'Rafeeena', password: 'pass4', subject: 'Malayalam', classes: ['KG', 'Grd 1', '2A', '3A'] },
+  { username: 'Raseena', password: 'pass5', subject: 'Islamic, Quran Recitation, Fiqh', classes: ['3A', '4A', '1A', '2A', '5B'] },
+  { username: 'Sumna', password: 'pass6', subject: 'Islamic, Arabic, Quran Hifdh', classes: ['4A', '4B', '2A', '3A', '3B'] },
+  { username: 'Zarina', password: 'pass7', subject: 'Hifd, Fiqh', classes: ['4B', '6', '7'] },
+  { username: 'Sajeena', password: 'pass8', subject: 'Moral, Malayalam, Quran and Hadith', classes: ['3B', '4B', '5B'] },
+  { username: 'Habeeba', password: 'pass9', subject: 'Islamic, Activity, History, Quran Padanam, Hadith Padanam, Quran Padanam', classes: ['3B', '4B', '5B', '6', '7'] },
+  { username: 'Mujeeb', password: 'pass10', subject: 'Arabic, Quran and Hadith', classes: ['5A', '5B', '6', '7', '8'] },
+  { username: 'Arif', password: 'pass11', subject: 'Arabic', classes: ['4A', '4B', '5A', '5'] },
+  { username: 'Shabnam', password: 'pass12', subject: 'History, Quran Padanam', classes: ['5', '6', '7', '8'] },
+  { username: 'Najeeb', password: 'pass13', subject: 'Hadith', classes: ['8'] },
+  { username: 'Rahina', password: 'pass14', subject: 'Quran Hifd & Recitation', classes: ['6', '5A', '5B', '4B', '3B'] },
+  { username: 'Mehnaz Shoukath', password: 'pass15', subject: 'Arabic, Moral, Fiqh, Hadees, Quran Hifd, Quran Recitation', classes: ['3B', '4A', '5A', '5B', '6', '7'] }
+];
+
+const classTeachers = [
+  { username: 'Shaniya', password: 'pass1', class: 'KG' },
+  { username: 'Hijaz', password: 'pass2', class: 'Grd 1' },
+  { username: 'Shaniya', password: 'pass3', class: 'Grd 2' },
+  { username: 'Afrah', password: 'pass4', class: 'Grd 3 A' },
+  { username: 'Habeeba', password: 'pass5', class: 'Grd 3 B' },
+  { username: 'Raseena', password: 'pass6', class: 'Grd 4 A' },
+  { username: 'Zarina', password: 'pass7', class: 'Grd 4 B' },
+  { username: 'Mujeeb', password: 'pass8', class: 'Grd 5 A' },
+  { username: 'Rahina', password: 'pass9', class: 'Grd 5 B' },
+  { username: 'Mehnaz', password: 'pass10', class: 'Grd 6' },
+  { username: 'Shabnam', password: 'pass11', class: 'Grd 7' }
+];
+
+    const parents = [
+      { username: 'parent1', password: 'parentpass1', student: 'Alice', class: 'Class 1' },
+      { username: 'parent2', password: 'parentpass2', student: 'Bob', class: 'Class 1' }
     ];
-
     const studentsByClass = {
-      'KGA': [{ name: 'Alice', rollNo: 1 }, { name: 'Bob', rollNo: 2 }],
-      '1A': [{ name: 'Charlie', rollNo: 3 }, { name: 'David', rollNo: 4 }],
-      // More classes...
+      'Class 1': [
+        { name: 'Alice', rollNo: 1, Maths: 85, Science: 90, English: 78 },
+        { name: 'Bob', rollNo: 2, Maths: 92, Science: 88, English: 81 },
+      ],
+      'Class 2': [
+        { name: 'Charlie', rollNo: 3, Maths: 75, Science: 85, English: 80 },
+        { name: 'David', rollNo: 4, Maths: 89, Science: 76, English: 84 },
+      ],
     };
-
     let currentTeacher = null;
     let selectedClass = '';
-    let selectedSubject = '';
+    let loginType = '';
 
     function showLoginPage(type) {
+      loginType = type;
       document.getElementById('selection-page').style.display = 'none';
       document.getElementById('login-page').style.display = 'block';
-      document.getElementById('login-type').textContent = type === 'faculty' ? 'Faculty Login' : 'Parent Login';
+      document.getElementById('login-type').textContent = type === 'teacher' ? 'Teacher Login' : type === 'class-teacher' ? 'Class Teacher Login' : 'Parent Login';
     }
 
     function login() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       const errorDiv = document.getElementById('login-error');
+      errorDiv.textContent = '';
 
-      const teacher = teachers.find(t => t.username === username && t.password === password);
-
-      if (teacher) {
-        currentTeacher = teacher;
-        document.getElementById('login-page').style.display = 'none';
-        document.getElementById('class-selection').style.display = 'block';
-        document.getElementById('teacher-name').textContent = `Logged in as: ${teacher.username}`;
-        populateClassAndSubjectOptions(teacher);
-      } else {
-        errorDiv.textContent = 'Invalid username or password';
+      if (loginType === 'teacher') {
+        currentTeacher = teachers.find(teacher => teacher.username === username && teacher.password === password);
+        if (currentTeacher) {
+          document.getElementById('login-page').style.display = 'none';
+          document.getElementById('class-selection').style.display = 'block';
+          return;
+        }
+      } else if (loginType === 'class-teacher') {
+        const classTeacher = classTeachers.find(teacher => teacher.username === username && teacher.password === password);
+        if (classTeacher) {
+          document.getElementById('login-page').style.display = 'none';
+          document.getElementById('class-teacher-page').style.display = 'block';
+          document.getElementById('class-teacher-name').textContent = `Class: ${classTeacher.class}`;
+          updateClassSummaryTable(classTeacher.class);
+          return;
+        }
+      } else if (loginType === 'parent') {
+        const parent = parents.find(p => p.username === username && p.password === password);
+        if (parent) {
+          document.getElementById('login-page').style.display = 'none';
+          document.getElementById('parent-page').style.display = 'block';
+          document.getElementById('parent-student-name').textContent = `Student: ${parent.student}`;
+          showParentMarks(parent.class, parent.student);
+          return;
+        }
       }
+
+      errorDiv.textContent = 'Invalid username or password.';
     }
 
-    function populateClassAndSubjectOptions(teacher) {
-      const classSelect = document.getElementById('classSelect');
-      const subjectSelect = document.getElementById('subjectSelect');
-      classSelect.innerHTML = '';
-      subjectSelect.innerHTML = '';
+    function showParentMarks(className, studentName) {
+      const student = studentsByClass[className].find(s => s.name === studentName);
+      const tableBody = document.getElementById('parent-student-marks');
+      tableBody.innerHTML = '';
 
-      teacher.classes.forEach(cls => {
-        const option = document.createElement('option');
-        option.value = cls;
-        option.textContent = cls;
-        classSelect.appendChild(option);
-      });
-
-      teacher.subjects.forEach(subj => {
-        const option = document.createElement('option');
-        option.value = subj;
-        option.textContent = subj;
-        subjectSelect.appendChild(option);
+      Object.keys(student).forEach(subject => {
+        if (subject !== 'name' && subject !== 'rollNo') {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${subject}</td><td>${student[subject]}</td>`;
+          tableBody.appendChild(row);
+        }
       });
     }
 
     function showStudentTable() {
       selectedClass = document.getElementById('classSelect').value;
-      selectedSubject = document.getElementById('subjectSelect').value;
       document.getElementById('class-selection').style.display = 'none';
       document.getElementById('marks-page').style.display = 'block';
-      document.getElementById('class-name').textContent = `${selectedClass} - ${selectedSubject}`;
-      
+      document.getElementById('class-name').textContent = selectedClass;
       updateStudentTable();
     }
 
     function updateStudentTable() {
       const tableBody = document.getElementById('student-table-body');
       tableBody.innerHTML = '';
-
-      const students = studentsByClass[selectedClass];
-      students.forEach(student => {
+      studentsByClass[selectedClass].forEach(student => {
         const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${student.name}</td>
-          <td>${student.rollNo}</td>
-          <td><input type="number" class="form-control" placeholder="Enter marks"></td>
-        `;
+        row.innerHTML = `<td>${student.name}</td><td>${student.rollNo}</td><td><input type="number" class="form-control" placeholder="Enter marks"></td>`;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function updateClassSummaryTable(className) {
+      const tableBody = document.getElementById('class-summary-table-body');
+      tableBody.innerHTML = '';
+      studentsByClass[className].forEach(student => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${student.name}</td><td>${student.rollNo}</td><td>${student.Maths}</td><td>${student.Science}</td><td>${student.English}</td>`;
         tableBody.appendChild(row);
       });
     }
@@ -224,7 +318,6 @@
 
     function removeStudent() {
       const name = prompt("Enter the name of the student to remove:");
-
       const index = studentsByClass[selectedClass].findIndex(student => student.name === name);
       if (index !== -1) {
         studentsByClass[selectedClass].splice(index, 1);
@@ -241,6 +334,10 @@
     function goBackToSelection() {
       document.getElementById('login-page').style.display = 'none';
       document.getElementById('selection-page').style.display = 'block';
+      document.getElementById('marks-page').style.display = 'none';
+      document.getElementById('class-selection').style.display = 'none';
+      document.getElementById('class-teacher-page').style.display = 'none';
+      document.getElementById('parent-page').style.display = 'none';
     }
 
     function goBackToClassSelection() {
