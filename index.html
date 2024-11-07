@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-image: url('https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .container {
+      background-color: rgba(0, 0, 0, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 40px rgba(0, 0, 0, 0.5);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h2, h4 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      color: #d1e7dd;
+    }
+
+    .btn-primary, .btn-success, .btn-danger {
+      width: 100%;
+      padding: 10px;
+      border-radius: 25px;
+      font-size: 1.1em;
+      font-weight: bold;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      border: none;
+      transition: background 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0056b3, #003f7f);
+    }
+
+    .table-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Initial Selection Page -->
+    <div id="selection-page">
+      <h2>Welcome</h2>
+      <p class="text-center">Please select your login type</p>
+      <button class="btn btn-primary mb-3" onclick="showLoginPage('faculty')">Faculty Login</button>
+      <button class="btn btn-primary mb-3" onclick="showLoginPage('parent')">Parent Login</button>
+    </div>
+
+    <!-- Login Page -->
+    <div id="login-page" style="display: none;">
+      <h2 id="login-type">Login</h2>
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" placeholder="Username">
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" placeholder="Password">
+      </div>
+      <button class="btn btn-primary" onclick="login()">Login</button>
+      <div id="login-error" class="text-danger mt-3"></div>
+      <button class="btn btn-secondary mt-3" onclick="goBackToSelection()">Back</button>
+    </div>
+
+    <!-- Class Selection -->
+    <div id="class-selection" style="display: none;">
+      <h2>Select Class and Subject</h2>
+      <select id="classSelect" class="form-select mb-3"></select>
+      <select id="subjectSelect" class="form-select mb-3"></select>
+      <button class="btn btn-primary" onclick="showStudentTable()">Proceed</button>
+    </div>
+
+    <!-- Student Marks Table -->
+    <div id="marks-page" style="display: none;">
+      <h2 id="subject-title">Teacher Dashboard - <span id="class-name"></span></h2>
+      <h4 id="teacher-name"></h4>
+      <table class="table table-dark table-striped">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Roll No</th>
+            <th>Marks</th>
+          </tr>
+        </thead>
+        <tbody id="student-table-body"></tbody>
+      </table>
+      <button class="btn btn-success" onclick="submitMarks()">Submit Marks</button>
+
+      <div class="table-buttons">
+        <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+        <button class="btn btn-danger" onclick="removeStudent()">Remove Student</button>
+      </div>
+
+      <button class="btn btn-secondary mt-3" onclick="goBackToClassSelection()">Back</button>
+    </div>
+  </div>
+
+  <script>
+    const teachers = [
+      { username: 'hijaz', password: 'pass1', classes: ['KGA', '1A', '2A', '4A', '4B', '5A'], subjects: ['Quran Recitation', 'Islamic', 'Hifd', 'Moral', 'History'] },
+      { username: 'shaniya', password: 'pass2', classes: ['KG', '1', '2', '3A', '3B'], subjects: ['Hifd', 'Arabic', 'Islamic', 'Moral'] },
+      // More teachers...
+    ];
+
+    const studentsByClass = {
+      'KGA': [{ name: 'Alice', rollNo: 1 }, { name: 'Bob', rollNo: 2 }],
+      '1A': [{ name: 'Charlie', rollNo: 3 }, { name: 'David', rollNo: 4 }],
+      // More classes...
+    };
+
+    let currentTeacher = null;
+    let selectedClass = '';
+    let selectedSubject = '';
+
+    function showLoginPage(type) {
+      document.getElementById('selection-page').style.display = 'none';
+      document.getElementById('login-page').style.display = 'block';
+      document.getElementById('login-type').textContent = type === 'faculty' ? 'Faculty Login' : 'Parent Login';
+    }
+
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errorDiv = document.getElementById('login-error');
+
+      const teacher = teachers.find(t => t.username === username && t.password === password);
+
+      if (teacher) {
+        currentTeacher = teacher;
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('class-selection').style.display = 'block';
+        document.getElementById('teacher-name').textContent = `Logged in as: ${teacher.username}`;
+        populateClassAndSubjectOptions(teacher);
+      } else {
+        errorDiv.textContent = 'Invalid username or password';
+      }
+    }
+
+    function populateClassAndSubjectOptions(teacher) {
+      const classSelect = document.getElementById('classSelect');
+      const subjectSelect = document.getElementById('subjectSelect');
+      classSelect.innerHTML = '';
+      subjectSelect.innerHTML = '';
+
+      teacher.classes.forEach(cls => {
+        const option = document.createElement('option');
+        option.value = cls;
+        option.textContent = cls;
+        classSelect.appendChild(option);
+      });
+
+      teacher.subjects.forEach(subj => {
+        const option = document.createElement('option');
+        option.value = subj;
+        option.textContent = subj;
+        subjectSelect.appendChild(option);
+      });
+    }
+
+    function showStudentTable() {
+      selectedClass = document.getElementById('classSelect').value;
+      selectedSubject = document.getElementById('subjectSelect').value;
+      document.getElementById('class-selection').style.display = 'none';
+      document.getElementById('marks-page').style.display = 'block';
+      document.getElementById('class-name').textContent = `${selectedClass} - ${selectedSubject}`;
+      
+      updateStudentTable();
+    }
+
+    function updateStudentTable() {
+      const tableBody = document.getElementById('student-table-body');
+      tableBody.innerHTML = '';
+
+      const students = studentsByClass[selectedClass];
+      students.forEach(student => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${student.name}</td>
+          <td>${student.rollNo}</td>
+          <td><input type="number" class="form-control" placeholder="Enter marks"></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function addStudent() {
+      const name = prompt("Enter the student's name:");
+      const rollNo = prompt("Enter the student's roll number:");
+
+      if (name && rollNo) {
+        studentsByClass[selectedClass].push({ name, rollNo: parseInt(rollNo) });
+        updateStudentTable();
+      } else {
+        alert("Student name and roll number are required.");
+      }
+    }
+
+    function removeStudent() {
+      const name = prompt("Enter the name of the student to remove:");
+
+      const index = studentsByClass[selectedClass].findIndex(student => student.name === name);
+      if (index !== -1) {
+        studentsByClass[selectedClass].splice(index, 1);
+        updateStudentTable();
+      } else {
+        alert("Student not found.");
+      }
+    }
+
+    function submitMarks() {
+      alert('Marks submitted successfully!');
+    }
+
+    function goBackToSelection() {
+      document.getElementById('login-page').style.display = 'none';
+      document.getElementById('selection-page').style.display = 'block';
+    }
+
+    function goBackToClassSelection() {
+      document.getElementById('marks-page').style.display = 'none';
+      document.getElementById('class-selection').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
